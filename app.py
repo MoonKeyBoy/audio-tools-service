@@ -39,5 +39,34 @@ def split_audio():
     except subprocess.CalledProcessError as e:
         return jsonify({"error": "FFmpeg command failed", "details": e.stderr}), 500
 
+@app.route('/duration', methods=['POST'])
+def get_duration():
+    data = request.get_json()
+    if not data or 'file_path' not in data:
+        return jsonify({"error": "Missing file_path"}), 400
+
+    relative_path = data['file_path']
+    input_file = os.path.join(BASE_DIR, relative_path)
+
+    if not os.path.exists(input_file):
+        return jsonify({"error": f"File not found: {input_file}"}), 404
+
+    # La commande ffprobe pour obtenir la durée en secondes
+    command = [
+        'ffprobe',
+        '-v', 'error',
+        '-show_entries', 'format=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1',
+        input_file
+    ]
+
+    try:
+        # On exécute la commande et on récupère la sortie
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
+        duration = float(result.stdout.strip())
+        return jsonify({"duration_seconds": duration}), 200
+    except (subprocess.CalledProcessError, ValueError) as e:
+        return jsonify({"error": "Failed to get duration", "details": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
