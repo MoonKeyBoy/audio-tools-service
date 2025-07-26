@@ -28,7 +28,7 @@ def split_audio():
         'ffmpeg',
         '-i', input_file,
         '-f', 'segment',
-        '-segment_time', '870',
+        '-segment_time', '300',
         '-c', 'copy',
         output_pattern
     ]
